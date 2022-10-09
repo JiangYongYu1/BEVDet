@@ -18,6 +18,7 @@ from mmxdeploy.codebase.bevdet import *
 from thop import profile
 from torchstat import stat
 
+from pathlib import Path
 
 
 def parse_args():
@@ -25,6 +26,7 @@ def parse_args():
         description='MMDet test (and eval) a model')
     parser.add_argument('config', help='test config file path')
     parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument("--save_onnx_path", type=str, required=True, help="onnx save dir")
     parser.add_argument(
         '--fuse-conv-bn',
         action='store_true',
@@ -171,7 +173,7 @@ def main():
         result = model.postprocess(outs, img_metas)
         print(result)
 
-        out_onnx_f = 'bevdet_pseudo_cloud.onnx'
+        out_onnx_f = Path(args.save_onnx_path) / 'bevdet_pseudo_cloud.onnx'
         model.forward = model.extract_pseudo_cloud
         torch.onnx.export(
             model,
@@ -187,7 +189,7 @@ def main():
         for task_id in range(6):
             for out_name in ['reg', 'height', 'dim', 'rot', 'vel', 'heatmap']:
                 output_names.append(f'{out_name}_{task_id}')
-        out_onnx_f = 'bevdet_detector.onnx'
+        out_onnx_f = Path(args.save_onnx_path) / 'bevdet_detector.onnx'
         model.forward = model.detector
         torch.onnx.export(
             model,
